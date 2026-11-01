@@ -8,7 +8,7 @@ from myproject.trainer import Trainer
 
 @pytest.mark.smoke
 def test_dry_run_fast_dev_run() -> None:
-    """Dry run (fast_dev_run): 1-2 батча, проверяем что forward, loss, backward, step не падают."""
+    """Dry run (fast_dev_run): 1-2 батча без падений forward/loss/backward/step."""
     ds = SyntheticDataset(num_samples=8, in_features=4)
     loader = create_dataloader(ds, batch_size=2, shuffle=False)
     model = SimpleClassifier(in_features=4, num_classes=2)

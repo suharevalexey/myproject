@@ -7,7 +7,10 @@ from myproject.models import SimpleClassifier
 
 
 @pytest.mark.unit
-def test_classifier_output_dimensions(sample_features: int, sample_classes: int) -> None:
+def test_classifier_output_dimensions(
+    sample_features: int,
+     sample_classes: int
+    ) -> None:
     """Unit: модель возвращает правильное количество классов."""
     model = SimpleClassifier(in_features=sample_features, num_classes=sample_classes)
     x = torch.randn(4, sample_features)
