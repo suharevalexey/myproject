@@ -1,5 +1,4 @@
 import pytest
-import torch
 
 from myproject.dataset import SyntheticDataset, create_dataloader
 
