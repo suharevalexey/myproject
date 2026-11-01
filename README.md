@@ -10,6 +10,8 @@
 ├── .dvc/                  # Конфигурация и метаданные DVC
 ├── data/                  # Данные (хранятся в DVC, игнорируются Git)
 │   └── raw_data.csv
+├── mlruns/                # Artifact Store MLflow (артефакты моделей, игнорируются Git)
+├── mlflow.db              # Backend Store MLflow (база SQLite, игнорируется Git)
 ├── output/                # Результаты работы пайплайна
 │   └── metrics.txt        # Метрики пайплайна
 ├── src/
@@ -157,3 +159,43 @@ uv run pytest -v --cov=myproject --cov-report=term-missing
 uv run pytest -m smoke -v
 uv run pytest -m property -v
 ```
+
+---
+
+## Домашнее задание №5. Трекинг экспериментов (MLflow Tracking, PyTorch Autologging)
+
+В рамках практической работы развёрнута система трекинга экспериментов MLflow для логирования параметров, метрик, артефактов и сравнительного анализа моделей.
+
+### 1. Архитектура хранилища MLflow
+* **Backend Store**: база данных SQLite (`mlflow.db`) для надёжного хранения метаданных экспериментов, параметров, метрик и тегов.
+* **Artifact Store**: локальное хранилище (`./mlruns`) для весов моделей (`model.pt`, формат MLmodel) и сопутствующих файлов.
+* **Tracking Server**: локальный сервер с веб-интерфейсом на порту 5000.
+
+### 2. Реализованные пайплайны (`src/myproject/`)
+* **`train.py`**: ручной трекинг эксперимента (`pytorch_training`) с логированием:
+  * Гиперпараметров (`learning_rate`, `epochs`, `batch_size`, `hidden_dim`, `seed`).
+  * Динамики метрик по эпохам (`train_loss` с аргументом `step=epoch` для построения кривых сходимости).
+  * Тегов (`model_type`, `framework`, `task`).
+  * Артефактов модели (веса `weights/model.pt` и пакет `mlflow.pytorch.log_model`).
+* **`train_autolog.py`**: автологирование через PyTorch Lightning (`mlflow.pytorch.autolog`):
+  * Модель `LightningClassifier` на базе `SimpleClassifier`.
+  * Автоматический сбор параметров оптимизатора, слоёв, метрик по эпохам и сохранение чекпоинтов без ручных вызовов `log_*`.
+
+### 3. Инструкция по запуску
+
+```powershell
+# 1. Запуск Tracking Server в фоновом терминале
+uv run mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 127.0.0.1 --port 5000
+
+# 2. Запуск обучения с ручным трекингом
+uv run python src/myproject/train.py
+
+# 3. Запуск обучения с autologging
+uv run python src/myproject/train_autolog.py
+```
+
+### 4. Анализ в MLflow UI
+* Веб-интерфейс доступен по адресу `http://localhost:5000`.
+* Проведено сравнение прогонов с разными гиперпараметрами (`learning_rate`) через инструмент **Compare**:
+  * Таблица различий гиперпараметров.
+  * Совмещённые графики изменения `train_loss` по эпохам.
