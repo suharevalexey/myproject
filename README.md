@@ -19,6 +19,13 @@
 │   │   └── train.py
 │   ├── generate_data.py   # Скрипт генерации синтетического датасета (ДЗ №3)
 │   └── process_data.py    # Скрипт обработки и подсчёта метрик (ДЗ №3)
+├── tests/                 # Пирамида тестов (Unit, Property, Smoke, Overfit, E2E)
+│   ├── conftest.py
+│   ├── test_block.py
+│   ├── test_dataloader.py
+│   ├── test_e2e.py
+│   ├── test_model.py
+│   └── test_train.py
 ├── .dvcignore
 ├── .gitignore
 ├── .python-version
@@ -118,4 +125,35 @@ uv run dvc push
 
 # Скачивание данных из хранилища (при переносе на новую машину)
 uv run dvc pull
+```
+
+---
+
+## Домашнее задание №4. Тестирование ML-пайплайна (TDD, pytest, Hypothesis)
+
+В рамках 3–4 лекций реализована пирамида тестирования машинного обучения по методологии **TDD (Test-Driven Development: Red → Green)**.
+
+### 1. Архитектура пайплайна (`src/myproject/`)
+* **`models.py`**: полносвязный блок `LinearBlock` (Linear + ReLU) и классификатор `SimpleClassifier`.
+* **`dataset.py`**: воспроизводимый датасет `SyntheticDataset` и утилита сборки батчей `create_dataloader`.
+* **`trainer.py`**: класс `Trainer`, инкапсулирующий шаги forward/backward/step, поддержку сухого прогона (`fast_dev_run`), smoke-проверку градиентов и переобучение одного батча (`overfit_batch`).
+
+### 2. Структура тестов и метки (`tests/`)
+Зарегистрированы и покрыты следующие категории тестов (`pytest marks`):
+* **`@pytest.mark.unit`**: изолированное тестирование компонентов (размерности выходов, расчет метрик, сборка батчей).
+* **`@pytest.mark.property`**: property-based тестирование инвариантов формы (shape preservation) при произвольных размерах батча с помощью библиотеки `Hypothesis`.
+* **`@pytest.mark.smoke`**:
+  * *Dry run*: 1–2 батча без падений цикла оптимизации (`fast_dev_run=True`).
+  * *Smoke-тест*: проверка конечности loss, убывания ошибки и обязательного наличия `param.grad is not None` у всех обучаемых параметров.
+* **`@pytest.mark.overfit`**: тест сходимости на одном батче до почти нулевого loss ($< 0.05$).
+* **`@pytest.mark.e2e`**: сквозное тестирование полного цикла обучения и последующего инференса.
+
+### 3. Запуск проверок
+```powershell
+# Запуск всех тестов с отчётом о покрытии кода
+uv run pytest -v --cov=myproject --cov-report=term-missing
+
+# Запуск тестов по конкретной метке (например, smoke или property)
+uv run pytest -m smoke -v
+uv run pytest -m property -v
 ```
