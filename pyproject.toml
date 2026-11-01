@@ -8,8 +8,11 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "dvc>=3.67.1",
+    "numpy>=2.5.4",
     "requests>=2.34.2",
     "ruff>=0.17.1",
+    "torch>=2.15.0",
     "ty>=0.0.89",
 ]
 
@@ -22,6 +25,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "hypothesis>=6.170.14",
     "pytest>=9.1.1",
 ]
 
@@ -43,3 +47,13 @@ python-version = "3.13"
 invalid-argument-type = "error"
 invalid-assignment = "error"
 invalid-return-type = "error"
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: Unit tests for individual components (block, model, dataloader)",
+    "property: Property-based tests with Hypothesis",
+    "smoke: Fast smoke and dry-run tests (loss finite, gradients not None)",
+    "overfit: Overfit single batch convergence tests",
+    "integration: Integration tests for pipeline components",
+    "e2e: End-to-end pipeline execution tests",
+]
